@@ -1,0 +1,11 @@
+# Vendors
+/node_modules/
+
+# Build
+/app/
+
+# Private
+/src/assets
+
+# Other
+/package-lock.json
