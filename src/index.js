@@ -1,13 +1,10 @@
 import Phaser from 'phaser';
-import loadingJpg from './assets/loading.jpg';
-import imgInsideA2 from './assets/Inside_A2.png';
-import imgInsideB from './assets/Inside_B.png';
-import imgOutsideA2 from './assets/Outside_A2.png';
-import imgOutsideA3 from './assets/Outside_A3.png';
-import imgOutsideB from './assets/Outside_B.png';
+import spriteActor1 from './assets/_actor1.png';
+import imgBuild from './assets/_build.png';
+import imgLine from './assets/_line.png';
+import imgLoading from './assets/_loading.jpg';
+import imgWorld from './assets/_world.png';
 import jsonYing from './assets/ying.json';
-import spriteActor1 from './assets/Actor1.png';
-import imgDialog1 from './assets/dialog1.png';
 
 const gameConfig = {
   type: Phaser.AUTO,
@@ -29,7 +26,7 @@ const gameConfig = {
         {
           type: 'image',
           key: 'loading',
-          url: loadingJpg
+          url: imgLoading
         }
       ]
     }
@@ -39,8 +36,9 @@ const gameConfig = {
 const game = new Phaser.Game(gameConfig);
 const myFontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif';
 let player = {};
-let worldX = 768;
-let worldY = 1008;
+let playerX = 360;
+let playerY = 160;
+let baseSize = 40;
 
 function preload() {
   const loading = this.add.image(gameConfig.width / 2, gameConfig.height / 2, 'loading');
@@ -65,104 +63,98 @@ function preload() {
     loading.destroy();
   });
 
-  this.load.image('insideA2', imgInsideA2);
-  this.load.image('insideB', imgInsideB);
-  this.load.image('outsideA2', imgOutsideA2);
-  this.load.image('outsideA3', imgOutsideA3);
-  this.load.image('outsideB', imgOutsideB);
-  this.load.image('dialog1', imgDialog1);
+  this.load.spritesheet('actor1', spriteActor1, { frameWidth: baseSize, frameHeight: baseSize });
+  this.load.image('build', imgBuild);
+  this.load.image('line', imgLine);
+  this.load.image('world', imgWorld);
   this.load.tilemapTiledJSON('ying', jsonYing);
-  this.load.spritesheet('actor1', spriteActor1, { frameWidth: 48, frameHeight: 48 });
 }
 
 function create() {
-  const yingMap = this.make.tilemap({ key: 'ying'});
-  const insideA2Tile = yingMap.addTilesetImage('Inside_A2', 'insideA2');
-  const insideBTile = yingMap.addTilesetImage('Inside_B', 'insideB');
-  const outsideA2Tile = yingMap.addTilesetImage('Outside_A2', 'outsideA2');
-  const outsideA3Tile = yingMap.addTilesetImage('Outside_A3', 'outsideA3');
-  const outsideBTile = yingMap.addTilesetImage('Outside_B', 'outsideB');
+  const mapYing = this.make.tilemap({ key: 'ying'});
+  const tileBuild = mapYing.addTilesetImage('_build', 'build');
+  const tileWorld = mapYing.addTilesetImage('_world', 'world');
 
-  const groundLayer = yingMap.createStaticLayer('ground', [insideA2Tile, outsideA2Tile]);
-  const buildLayer = yingMap.createStaticLayer('build', [insideBTile, outsideA2Tile, outsideA3Tile, outsideBTile]);
-  const overLayer = yingMap.createStaticLayer('over', outsideBTile);
+  const layerGround = mapYing.createStaticLayer('ground', tileWorld);
+  const layerBuild = mapYing.createStaticLayer('build', [tileWorld, tileBuild]);
+  const layerCover = mapYing.createStaticLayer('cover', tileWorld);
 
   const camera = this.cameras.main;
-  const mark = this.add.rectangle(worldX, worldY, 48, 48, 0x000000, 0.3);
-  const npc = this.physics.add.staticSprite(672, 1200, 'actor1', 10);
+  const mark = this.add.rectangle(playerX, playerY, baseSize, baseSize, 0x000000, 0.3);
+  const npc = this.physics.add.staticSprite(0, 640, 'actor1', 10);
 
   const dialog = this.add.group();
-  const leftDialog = this.add.arc(48, gameConfig.height - 48, 48, 90, 270, false, 0x000000, 0.5);
-  const middleDialog = this.add.rectangle(gameConfig.width / 2, gameConfig.height - 48, gameConfig.width - 96, 96, 0x000000, 0.5);
-  const rightDialog = this.add.arc(gameConfig.width - 48, gameConfig.height - 48, 48, 270, 90, false, 0x000000, 0.5);
-  const dialog1Img = this.add.image(16, gameConfig.height - 48, 'dialog1');
-  const dialog2Img = this.add.image(gameConfig.width - 16, gameConfig.height - 48, 'dialog1');
-  const npcName = this.add.text(48, gameConfig.height - 96, '', { fontFamily: myFontFamily });
-  const npcText = this.add.text(gameConfig.width / 2, gameConfig.height - 48, '西塞山前白鹭飞，桃花流水鳜鱼肥', { fontFamily: myFontFamily });
-  const taskButton = this.add.circle(gameConfig.width / 5, gameConfig.height - 144, 24, 0x000000, 0.5);
-  const checkButton = this.add.circle(gameConfig.width * 2 / 5, gameConfig.height - 144, 24, 0x000000, 0.5);
-  const battleButton = this.add.circle(gameConfig.width * 3 / 5, gameConfig.height - 144, 24, 0x000000, 0.5);
-  const cancelButton = this.add.circle(gameConfig.width * 4 / 5, gameConfig.height - 144, 24, 0x000000, 0.5);
+  const dialogLeft = this.add.arc(baseSize, gameConfig.height - baseSize, baseSize, 90, 270, false, 0x000000, 0.5);
+  const dialogMiddle = this.add.rectangle(gameConfig.width / 2, gameConfig.height - baseSize, gameConfig.width - baseSize * 2, baseSize * 2, 0x000000, 0.5);
+  const dialogRight = this.add.arc(gameConfig.width - baseSize, gameConfig.height - baseSize, baseSize, 270, 90, false, 0x000000, 0.5);
+  const dialogLineLeft = this.add.image(16, gameConfig.height - baseSize, 'line');
+  const dialogLineRight = this.add.image(gameConfig.width - 16, gameConfig.height - baseSize, 'line');
+  const npcName = this.add.text(baseSize, gameConfig.height - baseSize * 2, '', { fontFamily: myFontFamily });
+  const npcText = this.add.text(gameConfig.width / 2, gameConfig.height - baseSize, '西塞山前白鹭飞， 桃花流水鳜鱼肥', { fontFamily: myFontFamily });
+  const buttonTask = this.add.circle(gameConfig.width - baseSize, gameConfig.height - 252, 20, 0xffffff);
+  const buttonCheck = this.add.circle(gameConfig.width - baseSize, gameConfig.height - 204, 20, 0xffffff);
+  const buttonBattle = this.add.circle(gameConfig.width - baseSize, gameConfig.height - 156, 20, 0xffffff);
+  const buttonCancel = this.add.circle(gameConfig.width - baseSize, gameConfig.height - 108, 20, 0xffffff);
 
   let tagetID = 0;
 
-  player = this.physics.add.sprite(worldX, worldY, 'actor1', 31);
-  overLayer.setDepth(5);
+  player = this.physics.add.sprite(playerX, playerY, 'actor1', 31);
+  layerCover.setDepth(5);
   camera.startFollow(player, false, 0.4, 0.4);
-  camera.setBounds(0, 0, yingMap.widthInPixels, yingMap.heightInPixels);
+  camera.setBounds(0, 0, mapYing.widthInPixels, mapYing.heightInPixels);
   player.setOrigin(0, 0);
   mark.setOrigin(0, 0);
   npc.setOrigin(0, 0);
-  npc.setOffset(24, 24);
+  npc.setOffset(baseSize / 2, baseSize / 2);
   npc.setInteractive();
   npc.tagetID = 20;
 
   // dialog group
   dialog.setDepth(10);
-  leftDialog.setDepth(10);
-  middleDialog.setDepth(10);
-  rightDialog.setDepth(10);
-  dialog1Img.setDepth(10);
-  dialog2Img.setDepth(10);
+  dialogLeft.setDepth(10);
+  dialogMiddle.setDepth(10);
+  dialogRight.setDepth(10);
+  dialogLineLeft.setDepth(10);
+  dialogLineRight.setDepth(10);
   npcName.setDepth(15);
   npcText.setDepth(15);
-  taskButton.setDepth(15);
-  checkButton.setDepth(15);
-  battleButton.setDepth(15);
-  cancelButton.setDepth(15);
-  dialog.add(leftDialog);
-  dialog.add(middleDialog);
-  dialog.add(rightDialog);
-  dialog.add(dialog1Img);
-  dialog.add(dialog2Img);
+  buttonTask.setDepth(15);
+  buttonCheck.setDepth(15);
+  buttonBattle.setDepth(15);
+  buttonCancel.setDepth(15);
+  dialog.add(dialogLeft);
+  dialog.add(dialogMiddle);
+  dialog.add(dialogRight);
+  dialog.add(dialogLineLeft);
+  dialog.add(dialogLineRight);
   dialog.add(npcName);
   dialog.add(npcText);
-  dialog.add(taskButton);
-  dialog.add(checkButton);
-  dialog.add(battleButton);
-  dialog.add(cancelButton);
+  dialog.add(buttonTask);
+  dialog.add(buttonCheck);
+  dialog.add(buttonBattle);
+  dialog.add(buttonCancel);
   dialog.setVisible(false);
   dialog.visible = false;
-  leftDialog.setScrollFactor(0, 0);
-  middleDialog.setScrollFactor(0, 0);
-  rightDialog.setScrollFactor(0, 0);
-  dialog1Img.setScrollFactor(0, 0);
-  dialog2Img.setScrollFactor(0, 0);
+  dialogLeft.setScrollFactor(0, 0);
+  dialogMiddle.setScrollFactor(0, 0);
+  dialogRight.setScrollFactor(0, 0);
+  dialogLineLeft.setScrollFactor(0, 0);
+  dialogLineRight.setScrollFactor(0, 0);
   npcName.setScrollFactor(0, 0);
   npcText.setScrollFactor(0, 0);
-  taskButton.setScrollFactor(0, 0);
-  checkButton.setScrollFactor(0, 0);
-  battleButton.setScrollFactor(0, 0);
-  cancelButton.setScrollFactor(0, 0);
+  buttonTask.setScrollFactor(0, 0);
+  buttonCheck.setScrollFactor(0, 0);
+  buttonBattle.setScrollFactor(0, 0);
+  buttonCancel.setScrollFactor(0, 0);
   npcName.setOrigin(0, 0.5);
   npcText.setOrigin(0.5, 0.5);
-  dialog2Img.setAngle(180);
-  cancelButton.setInteractive();
-  cancelButton.tagetID = 1;
+  dialogLineRight.setAngle(180);
+  buttonCancel.setInteractive();
+  buttonCancel.tagetID = 1;
 
   // collides
-  buildLayer.setCollisionByProperty({ collide: true });
-  this.physics.add.collider(player, buildLayer);
+  layerBuild.setCollisionByProperty({ collide: true });
+  this.physics.add.collider(player, layerBuild);
   this.physics.add.collider(player, npc, function() {
     if (tagetID == 20) {
       npcName.setText('钓鱼翁');
@@ -175,13 +167,13 @@ function create() {
   this.anims.create({
     key : 'left',
     frames : this.anims.generateFrameNumbers('actor1', { start: 18, end: 20 }),
-    frameRate : 8,
+    frameRate : 5,
     repeat : -1
   });
   this.anims.create({
     key : 'right',
     frames : this.anims.generateFrameNumbers('actor1', { start: 30, end: 32 }),
-    frameRate : 8,
+    frameRate : 5,
     repeat : -1
   });
   player.anims.play('right', true);
@@ -203,50 +195,50 @@ function create() {
 
     // player move
     if (!dialog.visible) {
-      worldX = formatPoint(pointer.worldX);
-      worldY = formatPoint(pointer.worldY);
-      mark.setPosition(worldX, worldY);
+      playerX = formatPoint(pointer.worldX);
+      playerY = formatPoint(pointer.worldY);
+      mark.setPosition(playerX, playerY);
 
       if (moveX()) {
         player.anims.play(moveX() > 0 ? 'right' : 'left', true);
-        player.body.setVelocityX(moveX() > 0 ? 96 : -96);
+        player.body.setVelocityX(moveX() > 0 ? 80 : -80);
       }
 
       if (moveY()) {
-        player.body.setVelocityY(moveY() > 0 ? 96 : -96);
+        player.body.setVelocityY(moveY() > 0 ? 80 : -80);
       }
     }
   }, this);
 
   // debug
-  // buildLayer.renderDebug(this.add.graphics(), { tileColor: null });
+  // layerBuild.renderDebug(this.add.graphics(), { tileColor: null });
 }
 
 function update() {
   if (moveX()) {
     if (Math.abs(moveX()) < 2) {
       player.body.setVelocityX(0);
-      player.setPosition(worldX, player.y);
+      player.setPosition(playerX, player.y);
     }
   }
 
   if (moveY()) {
     if (Math.abs(moveY()) < 2) {
       player.body.setVelocityY(0);
-      player.setPosition(player.x, worldY);
+      player.setPosition(player.x, playerY);
     }
   }
 }
 
 // utils
 function formatPoint(num) {
-  return Math.floor(num / 48) * 48;
+  return Math.floor(num / baseSize) * baseSize;
 }
 
 function moveX() {
-  return worldX - player.x;
+  return playerX - player.x;
 }
 
 function moveY() {
-  return worldY - player.y;
+  return playerY - player.y;
 }
