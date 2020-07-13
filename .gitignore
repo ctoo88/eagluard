@@ -7,5 +7,7 @@
 # Private
 /src/assets
 
+scenario.md
+
 # Other
 /package-lock.json
